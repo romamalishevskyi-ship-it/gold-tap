@@ -1,0 +1,448 @@
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#090806">
+<title>GOLD TAP 3.0</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;color:#fff;background:#090806;
+ font-family:Arial,sans-serif;
+ background-image:radial-gradient(ellipse at 50% 25%,#49300c,#171006 48%,#090806 85%);
+ min-height:100vh
+}
+.app{max-width:480px;margin:auto;padding:17px 15px 100px}
+header{display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:24px;font-weight:900;color:#ffdc79;letter-spacing:2px}
+.season{font-size:10px;border:1px solid #96702d;padding:7px;border-radius:20px;color:#e8c878}
+.balance{
+ margin-top:22px;padding:20px;text-align:center;border-radius:20px;
+ background:linear-gradient(145deg,#39290e,#171108);
+ border:1px solid #98702c;box-shadow:0 5px 30px #0008
+}
+.small{font-size:11px;color:#c8ad70;letter-spacing:1px}
+.gold{font-size:39px;font-weight:900;color:#ffdf81;margin:9px}
+.stats{display:flex;justify-content:space-around;gap:5px}
+.stat{font-size:12px;color:#e8c878}
+.progress{margin-top:18px}
+.bar{height:9px;background:#302414;border-radius:20px;overflow:hidden;margin-top:8px}
+.fill{height:100%;width:0;background:linear-gradient(90deg,#a56b12,#ffe99a);transition:.3s}
+.arena{
+ width:270px;height:270px;max-width:85vw;max-height:85vw;
+ margin:24px auto 12px;border-radius:50%;
+ display:flex;align-items:center;justify-content:center;
+ position:relative;cursor:pointer;user-select:none;
+ background:radial-gradient(circle,#b17d26 0%,#68420f 37%,#241605 65%,#100c05 75%);
+ border:3px solid #d8a945;
+ box-shadow:0 0 15px #dba83977,0 0 50px #dba83933,inset 0 0 35px #ffdf7c55;
+ touch-action:manipulation
+}
+.arena:before{content:"";position:absolute;inset:10px;border:1px solid #ffdf8055;border-radius:50%}
+.bull{font-size:145px;filter:drop-shadow(0 8px 8px #000);transition:transform .12s;z-index:1}
+.arena:active .bull{transform:scale(.89) rotate(-3deg)}
+.taptext{text-align:center;color:#e9ca7d;font-size:12px;letter-spacing:1px}
+.energy{text-align:center;margin:14px;color:#f5d47b;font-weight:bold}
+.action{text-align:center}
+button{
+ border:1px solid #d7a747;cursor:pointer;font-weight:bold;color:#211505;
+ background:linear-gradient(135deg,#ffedaa,#c48a24);
+ padding:12px 15px;border-radius:12px;font-size:13px;
+ box-shadow:0 3px 10px #0005
+}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.35;cursor:not-allowed}
+.secondary{background:#21180b;color:#f4d47f;border:1px solid #76551f}
+.tabs{
+ position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:auto;
+ display:grid;grid-template-columns:repeat(5,1fr);
+ background:#130f09;border-top:1px solid #72501d;
+ padding:9px 2px calc(9px + env(safe-area-inset-bottom));z-index:10
+}
+.tab{background:none;color:#bda16b;border:0;box-shadow:none;padding:6px 1px;font-size:10px}
+.tab span{display:block;font-size:21px;margin-bottom:4px}
+.tab.active{color:#ffdc77}
+.panel{display:none;margin-top:23px}
+.panel.active{display:block}
+.card{
+ background:linear-gradient(145deg,#2b200f,#171109);
+ border:1px solid #60461e;border-radius:17px;padding:16px;margin-bottom:12px
+}
+h2{color:#ffdb78;font-size:21px;margin:0 0 16px}
+.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 0;border-bottom:1px solid #49361b}
+.item:last-child{border:0}
+.item small{display:block;color:#bca477;margin-top:5px;font-size:11px}
+.item button{font-size:11px;padding:10px 12px;white-space:nowrap}
+input,select{
+ width:100%;padding:13px;background:#100c07;color:#fff;
+ border:1px solid #8b682b;border-radius:10px;margin:9px 0
+}
+.message{font-size:12px;color:#ffdb78;margin-top:10px;min-height:18px}
+.float{
+ position:absolute;z-index:4;color:#ffe47e;font-size:23px;
+ font-weight:bold;pointer-events:none;animation:up .7s forwards
+}
+.coinfx{position:absolute;font-size:22px;pointer-events:none;animation:coinup .8s forwards}
+@keyframes up{to{transform:translateY(-85px) scale(1.3);opacity:0}}
+@keyframes coinup{to{transform:translate(35px,-100px) rotate(180deg);opacity:0}}
+.daily{text-align:center}
+.daily strong{font-size:28px;color:#ffdc79;display:block;margin:12px}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+ <div class="logo">🐂 GOLD TAP</div>
+ <div class="season">SEASON 01 · 30 DAYS</div>
+</header>
+
+<div class="balance">
+ <div class="small">ТВІЙ БАЛАНС</div>
+ <div class="gold"><span id="gold">0</span> 🪙</div>
+ <div class="stats">
+  <div class="stat">⚡ <span id="energy">1000</span></div>
+  <div class="stat">⭐ Рівень <span id="level">1</span></div>
+  <div class="stat">💰 +<span id="income">0</span>/год</div>
+ </div>
+</div>
+
+<div class="progress">
+ <div class="small">ПРОГРЕС РІВНЯ</div>
+ <div class="bar"><div class="fill" id="progress"></div></div>
+</div>
+
+<div id="game">
+ <div class="arena" id="bull">
+  <div class="bull" id="bullImage">🐂</div>
+ </div>
+ <div class="taptext">НАТИСКАЙ НА ЗОЛОТОГО БИКА!</div>
+ <div class="energy">⚡ Енергія: <span id="energy2">1000</span> / 1000</div>
+ <div class="action">
+  <button onclick="upgrade()">⬆️ ПОКРАЩИТИ ТАП</button>
+  <p class="small">Сила тапу: <span id="power">1</span> GOLD</p>
+ </div>
+</div>
+
+<div class="panel" id="tasks">
+ <div class="card">
+  <h2>🎯 Щоденні завдання</h2>
+  <div class="item">
+   <div>👆 Зроби 100 тапів<small id="tapTask">0 / 100</small></div>
+   <button id="tapReward" onclick="claimTask('tap')">ЗАБРАТИ 100</button>
+  </div>
+  <div class="item">
+   <div>🪙 Зароби 1000 GOLD<small id="goldTask">0 / 1000</small></div>
+   <button id="goldReward" onclick="claimTask('gold')">ЗАБРАТИ 200</button>
+  </div>
+  <div class="message" id="taskMsg"></div>
+ </div>
+ <div class="card daily">
+  <h2>🎁 Щоденна нагорода</h2>
+  <div class="small">ЗАХОДЬ ЩОДНЯ ТА ОТРИМУЙ GOLD</div>
+  <strong>+250 GOLD 🪙</strong>
+  <button id="dailyButton" onclick="dailyReward()">ЗАБРАТИ НАГОРОДУ</button>
+ </div>
+</div>
+
+<div class="panel" id="shop">
+ <div class="card">
+  <h2>🛒 GOLD SHOP</h2>
+  <div class="item">
+   <div>⚡ BOOST x2<small>Подвійні GOLD за тапи на 1 годину</small></div>
+   <button onclick="buyBoost()">500 GOLD</button>
+  </div>
+  <div class="item">
+   <div>👑 VIP<small>Преміум статус</small></div>
+   <button onclick="buyVIP()">5000 GOLD</button>
+  </div>
+  <div class="item">
+   <div>✨ Золотий скін<small>Особливий вигляд бика</small></div>
+   <button onclick="buySkin()">1000 GOLD</button>
+  </div>
+  <div class="item">
+   <div>💰 Пасивний дохід<small>+10 GOLD за годину</small></div>
+   <button onclick="buyIncome()">750 GOLD</button>
+  </div>
+  <div class="message" id="shopMsg"></div>
+ </div>
+</div>
+
+<div class="panel" id="rating">
+ <div class="card">
+  <h2>🏆 РЕЙТИНГ</h2>
+  <div class="item"><div>🥇 Твій результат</div><b id="myScore">0</b></div>
+  <p class="small">Глобальний рейтинг з'явиться після підключення сервера.</p>
+ </div>
+</div>
+
+<div class="panel" id="profile">
+ <div class="card">
+  <h2>👤 ПРОФІЛЬ ГРАВЦЯ</h2>
+  <div class="small">ІМ'Я ГРАВЦЯ</div>
+  <input id="playerName" maxlength="20" placeholder="Введи ім'я">
+  <button onclick="saveName()">ЗБЕРЕГТИ</button>
+  <div class="item"><div>🐂 Аватар</div><b>Golden Bull</b></div>
+  <div class="item"><div>⭐ Рівень</div><b id="profileLevel">1</b></div>
+  <div class="item"><div>👑 VIP</div><b id="vipStatus">Ні</b></div>
+  <div class="item"><div>💰 Зароблено всього</div><b id="totalEarned">0</b></div>
+  <div class="message" id="profileMsg"></div>
+ </div>
+ <div class="card">
+  <h2>🌍 МОВА</h2>
+  <select id="language" onchange="setLanguage()">
+   <option value="uk">Українська</option>
+   <option value="pl">Polski</option>
+   <option value="en">English</option>
+  </select>
+  <p class="small">Інтерфейс поки український. Переклади додамо окремим оновленням.</p>
+ </div>
+</div>
+
+</div>
+
+<nav class="tabs">
+ <button class="tab active" onclick="showTab('game',this)"><span>🐂</span>ГРА</button>
+ <button class="tab" onclick="showTab('tasks',this)"><span>🎯</span>ЗАВДАННЯ</button>
+ <button class="tab" onclick="showTab('shop',this)"><span>🛒</span>МАГАЗИН</button>
+ <button class="tab" onclick="showTab('rating',this)"><span>🏆</span>РЕЙТИНГ</button>
+ <button class="tab" onclick="showTab('profile',this)"><span>👤</span>ПРОФІЛЬ</button>
+</nav>
+
+<script>
+const KEY='GOLD_TAP_3_SAVE';
+
+const defaults={
+ gold:0,energy:1000,taps:0,earned:0,level:1,
+ power:1,income:0,lastEnergy:Date.now(),
+ lastIncome:Date.now(),lastDaily:'',
+ claimedTap:false,claimedGold:false,
+ name:'Гравець',vip:false,skin:false,
+ boostUntil:0,language:'uk'
+};
+
+let data={...defaults};
+
+try{
+ const old=localStorage.getItem(KEY);
+ if(old)data={...defaults,...JSON.parse(old)};
+}catch(e){}
+
+function save(){
+ try{localStorage.setItem(KEY,JSON.stringify(data));}
+ catch(e){}
+}
+
+function addGold(n){
+ data.gold+=n;
+ data.earned+=n;
+ update();
+}
+
+function update(){
+ data.level=Math.min(20,1+Math.floor(data.earned/1000));
+
+ document.getElementById('gold').textContent=Math.floor(data.gold).toLocaleString('uk-UA');
+ document.getElementById('energy').textContent=Math.floor(data.energy);
+ document.getElementById('energy2').textContent=Math.floor(data.energy);
+ document.getElementById('level').textContent=data.level;
+ document.getElementById('income').textContent=data.income;
+ document.getElementById('power').textContent=data.power;
+ document.getElementById('progress').style.width=(data.earned%1000)/10+'%';
+
+ document.getElementById('profileLevel').textContent=data.level;
+ document.getElementById('vipStatus').textContent=data.vip?'VIP 👑':'Ні';
+ document.getElementById('totalEarned').textContent=Math.floor(data.earned);
+ document.getElementById('myScore').textContent=Math.floor(data.earned)+' GOLD';
+
+ document.getElementById('tapTask').textContent=Math.min(data.taps,100)+' / 100';
+ document.getElementById('goldTask').textContent=Math.min(data.earned,1000)+' / 1000';
+
+ document.getElementById('tapReward').disabled=data.taps<100||data.claimedTap;
+ document.getElementById('goldReward').disabled=data.earned<1000||data.claimedGold;
+
+ document.getElementById('dailyButton').disabled=data.lastDaily===new Date().toLocaleDateString();
+
+ document.getElementById('playerName').value=data.name;
+ document.getElementById('language').value=data.language;
+
+ save();
+}
+
+function tap(){
+ if(data.energy<1)return;
+
+ data.energy-=1;
+
+ let multiplier=Date.now()<data.boostUntil?2:1;
+ let amount=data.power*multiplier;
+
+ data.gold+=amount;
+ data.earned+=amount;
+ data.taps++;
+
+ const arena=document.getElementById('bull');
+ const f=document.createElement('div');
+ f.className='float';
+ f.textContent='+'+amount+' GOLD';
+ f.style.left=(25+Math.random()*45)+'%';
+ f.style.top='35%';
+ arena.appendChild(f);
+ setTimeout(()=>f.remove(),750);
+
+ if(Math.random()<0.3){
+  const c=document.createElement('div');
+  c.className='coinfx';
+  c.textContent='🪙';
+  c.style.left=(40+Math.random()*25)+'%';
+  c.style.top='40%';
+  arena.appendChild(c);
+  setTimeout(()=>c.remove(),850);
+ }
+
+ update();
+}
+
+document.getElementById('bull').addEventListener('click',tap);
+
+function upgrade(){
+ let price=100*data.power;
+ if(data.gold<price){
+  alert('Потрібно '+price+' GOLD!');
+  return;
+ }
+ data.gold-=price;
+ data.power++;
+ update();
+ alert('Сила тапу збільшена!');
+}
+
+function claimTask(type){
+ if(type==='tap'&&data.taps>=100&&!data.claimedTap){
+  data.claimedTap=true;
+  addGold(100);
+  document.getElementById('taskMsg').textContent='Нагороду за тапи отримано!';
+ }
+ if(type==='gold'&&data.earned>=1000&&!data.claimedGold){
+  data.claimedGold=true;
+  addGold(200);
+  document.getElementById('taskMsg').textContent='Нагороду за GOLD отримано!';
+ }
+ update();
+}
+
+function dailyReward(){
+ let today=new Date().toLocaleDateString();
+ if(data.lastDaily===today)return;
+ data.lastDaily=today;
+ addGold(250);
+ alert('Вітаємо! +250 GOLD 🎁');
+ update();
+}
+
+function buyBoost(){
+ if(data.gold<500)return alert('Недостатньо GOLD!');
+ data.gold-=500;
+ data.boostUntil=Date.now()+3600000;
+ document.getElementById('shopMsg').textContent='BOOST x2 активовано на 1 годину!';
+ update();
+}
+
+function buyVIP(){
+ if(data.vip)return alert('VIP уже активований!');
+ if(data.gold<5000)return alert('Недостатньо GOLD!');
+ data.gold-=5000;
+ data.vip=true;
+ document.getElementById('shopMsg').textContent='Вітаємо! Тепер ти VIP!';
+ update();
+}
+
+function buySkin(){
+ if(data.skin)return alert('Скін уже придбаний!');
+ if(data.gold<1000)return alert('Недостатньо GOLD!');
+ data.gold-=1000;
+ data.skin=true;
+ document.getElementById('bullImage').textContent='🐂✨';
+ document.getElementById('shopMsg').textContent='Золотий скін придбаний!';
+ update();
+}
+
+function buyIncome(){
+ if(data.gold<750)return alert('Недостатньо GOLD!');
+ data.gold-=750;
+ data.income+=10;
+ document.getElementById('shopMsg').textContent='Пасивний дохід збільшено!';
+ update();
+}
+
+function saveName(){
+ let name=document.getElementById('playerName').value.trim();
+ if(name.length<2)return alert('Мінімум 2 символи!');
+ data.name=name.slice(0,20);
+ document.getElementById('profileMsg').textContent='Ім’я збережено!';
+ save();
+}
+
+function setLanguage(){
+ data.language=document.getElementById('language').value;
+ document.getElementById('profileMsg').textContent='Мову вибрано. Переклад додамо пізніше.';
+ save();
+}
+
+function showTab(id,btn){
+ document.getElementById('game').style.display=id==='game'?'block':'none';
+ document.querySelectorAll('.panel').forEach(p=>{
+  p.style.display='none';
+  p.classList.remove('active');
+ });
+ if(id!=='game'){
+  const panel=document.getElementById(id);
+  panel.style.display='block';
+  panel.classList.add('active');
+ }
+ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+ btn.classList.add('active');
+}
+
+function restore(){
+ const now=Date.now();
+ const elapsed=Math.max(0,(now-data.lastEnergy)/1000);
+ data.energy=Math.min(1000,data.energy+elapsed*0.5);
+ data.lastEnergy=now;
+
+ const hours=Math.max(0,(now-data.lastIncome)/3600000);
+ if(data.income>0&&hours>0){
+  const earned=Math.floor(hours*data.income);
+  data.gold+=earned;
+  data.earned+=earned;
+ }
+ data.lastIncome=now;
+}
+
+restore();
+update();
+
+if(data.skin){
+ document.getElementById('bullImage').textContent='🐂✨';
+}
+
+setInterval(()=>{
+ const now=Date.now();
+ data.energy=Math.min(1000,data.energy+0.5);
+ data.lastEnergy=now;
+
+ if(data.income>0&&now-data.lastIncome>=60000){
+  const mins=(now-data.lastIncome)/60000;
+  const amount=Math.floor(data.income*mins/60);
+  if(amount>0){
+   data.gold+=amount;
+   data.earned+=amount;
+  }
+  data.lastIncome=now;
+ }
+ update();
+},1000);
+</script>
+</body>
+</html>
